@@ -1,0 +1,5 @@
+str3[3:] returns 'lo, how are you?'.
+str3[-3:] returns 'ou?'.
+str3[2:9:3] returns 'lhw'.
+str3[::-2] returns '?ue awh'.
+str3[2:8] returns 'llo, ho'.
