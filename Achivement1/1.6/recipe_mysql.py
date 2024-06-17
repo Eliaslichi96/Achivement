@@ -130,23 +130,54 @@ def update_recipe(conn, cursor):
     for recipe in results:
         print(recipe)
 
+    # Get recipe ID
     recipe_id = int(input("Enter the ID of the recipe to update: "))
+
+    # Valid column names
+    valid_columns = ['name', 'cooking_time', 'ingredients']
+
+    # Get column name
     column_name = input("Enter the name of the column to update (name, cooking_time, ingredients): ")
+
+    # Validate column name
+    if column_name not in valid_columns:
+        print(f"Error: '{column_name}' is not a valid column name.")
+        return
+
+    # Get new value
     new_value = input("Enter the new value: ")
 
+    # Handle the case where cooking_time should be an integer
+    if column_name == 'cooking_time':
+        new_value = int(new_value)
+
+    # Update query depending on column name
     if column_name == 'cooking_time' or column_name == 'ingredients':
-        difficulty = calculate_difficulty(new_value, len(new_value.split(', ')))
-        # Use backticks (`) to properly escape the column name "cooking_time"
+        # Get the current value of the other column needed to calculate difficulty
+        cursor.execute("SELECT cooking_time, ingredients FROM Recipes WHERE id = %s", (recipe_id,))
+        current_recipe = cursor.fetchone()
+        current_cooking_time = current_recipe[0]
+        current_ingredients = current_recipe[1].split(', ')
+
+        if column_name == 'cooking_time':
+            new_cooking_time = new_value
+            new_ingredients = current_ingredients
+        else:
+            new_cooking_time = current_cooking_time
+            new_ingredients = new_value.split(', ')
+
+        new_difficulty = calculate_difficulty(new_cooking_time, len(new_ingredients))
+
         update_query = f'''
         UPDATE Recipes 
-        SET `{column_name}` = %s, difficulty = %s 
+        SET {column_name} = %s, difficulty = %s 
         WHERE id = %s
         '''
-        cursor.execute(update_query, (new_value, difficulty, recipe_id))
+        cursor.execute(update_query, (new_value, new_difficulty, recipe_id))
     else:
         update_query = f'''
         UPDATE Recipes 
-        SET `{column_name}` = %s 
+        SET {column_name} = %s 
         WHERE id = %s
         '''
         cursor.execute(update_query, (new_value, recipe_id))
